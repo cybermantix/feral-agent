@@ -1,4 +1,4 @@
-# A code composition framework for the misfits, the dropouts, the freaks, and the PHP developers.
+# An AI Agent for the misfits, the dropouts, the freaks, and the PHP developers.
 
 
 This project is the AI Agent symfony bundle project for Feral CCF.
