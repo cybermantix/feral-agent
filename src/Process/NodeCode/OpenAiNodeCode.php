@@ -1,6 +1,6 @@
 <?php
 
-namespace Feral\Agent\NodeCode;
+namespace Feral\Agent\Process\NodeCode;
 
 use Feral\Core\Process\Attributes\CatalogNodeDecorator;
 use Feral\Core\Process\Attributes\IntConfigurationDescription;
