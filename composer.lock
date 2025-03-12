@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e286383fc788ff1c3db12b804dba511f",
+    "content-hash": "64bbba722d03a7243b28f5b79c695f66",
     "packages": [
         {
             "name": "feral/core",
