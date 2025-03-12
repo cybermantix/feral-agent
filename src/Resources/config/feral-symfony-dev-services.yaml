@@ -1,0 +1,22 @@
+
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+
+    Feral\Agent\Process\Event\Listener\ProcessEventListener: ~
+    Feral\Agent\Process\DataCollector\Trace\ProcessRunTrace: ~
+    Feral\Agent\Process\DataCollector\Trace\ProcessTrace: ~
+    Feral\Agent\Process\DataCollector\Trace\ProcessBuilder: ~
+    Feral\Agent\Process\DataCollector\Trace\ProcessBuilderInterface: '@Feral\Agent\Process\DataCollector\Trace\ProcessBuilder'
+    Feral\Agent\Process\DataCollector\ProcessCollector:
+        tags:
+            -
+                name: data_collector
+                # must match the value returned by the getName() method
+                id: 'Feral\Agent\Process\DataCollector\ProcessCollector'
+                # optional template (it has more priority than the value returned by getTemplate())
+                template: '@Feral/Symfony/data_collector/process'
+                # optional priority (positive or negative integer; default = 0)
+                # priority: 300

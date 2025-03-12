@@ -1,0 +1,58 @@
+/composer/
+/docker/
+/bin/
+/public/
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+# Ignore logs and cache
+/var/cache/
+/var/logs/
+
+# Ignore IDE-specific files
+.idea/
+.vscode/
+*.iml
+
+# Ignore Symfony debug bar files
+/var/debug/
+
+# Ignore built assets (if you have frontend assets)
+/public/build/
+/public/bundles/
+/node_modules/
+/yarn.lock
+/package-lock.json
+/.pnp
+.pnp.js
+
+# Ignore test artifacts
+/phpunit.xml
+/phpunit.xml.dist
+/tests/_output/
+/tests/_support/_generated/
+
+# Ignore Symfony Flex configuration files
+/.phpunit.result.cache
+
+# Ignore Docker files (if using Docker)
+/docker-compose.override.yml
+/.docker/
+
+# Ignore generated files from Doctrine
+/migrations/
+/var/data/*.sqlite
+/var/data/*.sqlite-journal
+
+# Ignore static analysis tools (if used)
+.phpstan.cache
+.psalm.cache
+/.php-cs-fixer.cache

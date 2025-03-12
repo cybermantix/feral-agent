@@ -1,0 +1,71 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: true
+
+    _instanceof:
+        Feral\Core\Process\Catalog\CatalogNode\CatalogNodeInterface:
+            tags: [ 'feral.catalog_node' ]
+        Feral\Core\Process\Catalog\CatalogSource\CatalogSourceInterface:
+            tags: [ 'feral.catalog_source' ]
+        Feral\Core\Process\Validator\ValidatorInterface:
+            tags: [ 'feral.process_validator' ]
+        Feral\Core\Process\NodeCode\NodeCodeSource\NodeCodeSourceInterface:
+            tags: [ 'feral.nodecode_source' ]
+        Feral\Core\Process\NodeCode\NodeCodeInterface:
+            tags: [ 'feral.nodecode' ]
+        Feral\Core\Process\ProcessInterface:
+            tags: [ 'feral.process' ]
+
+    Feral\Core\:
+        resource: '%feral-core.directory%/'
+        exclude:
+            - '%feral-core.directory%/Process/Attributes'
+            - '%feral-core.directory%/Process/Exception'
+            - '%feral-core.directory%/Process/Persistence'
+            - '%feral-core.directory%/Process/Reader'
+            - '%feral-core.directory%/Utility'
+
+    Feral\Agent\:
+        resource: '%feral-symfony.directory%/'
+        exclude:
+            - '%feral-symfony.directory%/DependencyInjection/'
+            - '%feral-symfony.directory%/Entity/'
+            - '%feral-symfony.directory%/Process/DataCollector'
+
+    # CORE
+    Feral\Core\Process\Catalog\CatalogNode\:
+        resource: '%feral-core.directory%/Process/Catalog/CatalogNode'
+        exclude:
+            - '%feral-core.directory%/Process/Catalog/CatalogNode/CatalogNode'
+
+    Feral\Core\Process\NodeCode\Data\:
+        resource: '%feral-core.directory%/Process/NodeCode/Data'
+
+    Feral\Core\Process\NodeCode\Flow\:
+        resource: '%feral-core.directory%/Process/NodeCode/Flow'
+
+    Feral\Core\Process\Engine\ProcessEngine: ~
+    Feral\Core\Process\ProcessJsonHydrator: ~
+    Feral\Core\Process\Catalog\CatalogInterface: '@Feral\Core\Process\Catalog\Catalog'
+
+    Feral\Core\Process\Modification\JSONModification: ~
+    Feral\Core\Process\Modification\JSONModificationInterface: '@Feral\Core\Process\Modification\JSONModification'
+
+    feral.runner:
+        class: 'Feral\Core\Process\Runner\Runner'
+        arguments: ['@Feral\Core\Process\ProcessFactory', '@Feral\Core\Process\Engine\ProcessEngine']
+
+    Feral\Core\Process\Runner\RunnerInterface: '@feral.runner'
+
+    Feral\Agent\Process\DataCollector\Trace\ProcessTraceCollector: ~
+    Feral\Agent\Process\DataCollector\Trace\ProcessTraceCollectorInterface: '@Feral\Agent\Process\DataCollector\Trace\ProcessTraceCollector'

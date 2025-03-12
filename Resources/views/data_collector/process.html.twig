@@ -1,0 +1,85 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% block menu %}
+    <span class="label">
+        <span class="icon">{{ include('@WebProfiler/Icon/router.svg') }}</span>
+        <strong>Feral Process</strong>
+    </span>
+{% endblock %}
+
+{% block panel %}
+<h2>Feral Process</h2>
+<div class="sf-tabs">
+    <ul class="tab-navigation">
+        {% for dataIdx,trace in collector.processTraces %}
+            <li data-tab-id="tab-{{ dataIdx }}">Process - {{ dataIdx }}</li>
+        {%  endfor %}
+    </ul>
+    {% for dataIdx,trace in collector.processTraces %}
+        <div id="tab-{{ dataIdx }}" {% if dataIdx == 0 %} class="active" {% endif %}>
+            {% for idx,runTrace in trace.processRunTraces %}
+                <div class="metrics">
+                    <div class="metric">
+                        <span class="value">{{ runTrace.nodeKey }}</span>
+                        <span class="label">Node Key</span>
+                    </div>
+                    <div class="metric">
+                        <span class="value">{{ runTrace.resultCode }}</span>
+                        <span class="label">Result</span>
+                    </div>
+                    <div class="metric">
+                        <span class="value">{{ runTrace.RunTimeInMilliseconds|number_format(2, '.', ',') }} <span class="unit">ms</span></span>
+                        <span class="label">Total execution time</span>
+                    </div>
+                </div>
+                <div>
+                    <h3>Result Message</h3>
+                    <pre>{{ runTrace.resultMessage }}</pre>
+                </div>
+                <div>Configuration
+                    {% if runTrace.configuration|length > 0 %}
+                        <table>
+                            <thead>
+                            <tr><th class="key">Key</th><th>Value</th></tr>
+                            </thead>
+                            <tbody>
+                            {% for key,value in runTrace.configuration %}
+                                <tr>
+                                    <td>{{key|e }}</td>
+                                    <td>
+                                        <pre class="sf-dump">{{ dump(value) }}</pre>
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <b>No Configuration</b>
+                    {% endif %}
+                </div>
+                <div>Context
+                    <table>
+                        <thead>
+                            <tr><th class="key">Key</th><th>Value</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for key,value in runTrace.contextSnapshot %}
+                            <tr>
+                                <td>{{key|e }}</td>
+                                <td>
+                                    <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#{{ key }}-{{ dataIdx }}-{{ idx }}-context" data-toggle-alt-content="Hide context details">Show context details</a>
+                                    <pre class="sf-dump" id="{{ key }}-{{ dataIdx }}-{{ idx }}-context" class="sf-toggle-content sf-toggle-hidden">{{ dump(value) }}</pre>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <hr/>
+            {% endfor %}
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
