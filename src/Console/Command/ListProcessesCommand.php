@@ -37,7 +37,12 @@ class ListProcessesCommand extends Command
         $processes = $this->factory->getAllProcesses();
         /** @var ProcessInterface $process */
         foreach ($processes as $process) {
-            $output->writeln(sprintf(' - %s', $process->getKey()));
+            $description = $process->getDescription();
+            if (!empty($description)) {
+                $output->writeln(sprintf(' - %s : %s', $process->getKey(), $description));
+            } else {
+                $output->writeln(sprintf(' - %s', $process->getKey()));
+            }
         }
         return Command::SUCCESS;
     }
