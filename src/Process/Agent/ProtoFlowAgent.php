@@ -11,6 +11,8 @@ use Feral\Core\Process\ProcessFactory;
 use Feral\Core\Process\ProcessInterface;
 use Feral\Core\Process\ProcessJsonHydrator;
 use Feral\Core\Process\Validator\ProcessValidator;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 /**
  * The process agent has a set of processes that can be run to complete
@@ -31,6 +33,8 @@ class ProtoFlowAgent implements AgentInterface
         private readonly RenderPrompt $renderPrompt,
         private readonly ProcessJsonHydrator $hydrator,
         private readonly ProcessValidator $validator,
+        private readonly LoggerInterface $logger,
+        private readonly Stopwatch $stopwatch,
     ) {}
 
     /**
@@ -38,6 +42,8 @@ class ProtoFlowAgent implements AgentInterface
      */
     function perform(string $mission, string $stimulus): AgentResult
     {
+        $this->logger->debug(sprintf('Running ProtoFlowAgent with "%s" and "%s"', $mission, $stimulus), ['event' => 'protoflow_agent_start']);
+        $this->stopwatch->start('perform');
         $promptInformation = [
             'command' => 'Take the mission and stimulus and build a process and create the initial context. Required configuration values without default values must be set in the initial context. Optional configuration values are optional.',
             'mission' => $mission,
@@ -46,7 +52,10 @@ class ProtoFlowAgent implements AgentInterface
             'response' => $this->getOutputExample()
         ];
 
+        $this->stopwatch->start('cognition');
         $cognition = $this->think($promptInformation);
+        $cognitionTiming = $this->stopwatch->lap('perform');
+        $cognitionTime = $cognitionTiming->getDuration();
 
         // GET THE PROCESS SELECTED BY THE BRAIN
         if (empty($cognition[self::PROCESS_KEY])) {
@@ -68,7 +77,18 @@ class ProtoFlowAgent implements AgentInterface
 
         // PROCESS
         $this->engine->process($process, $context);
+        $processTiming = $this->stopwatch->lap('perform');
+        $processTime = $processTiming->getDuration() - $cognitionTime;
+        $event = $this->stopwatch->stop('perform');
+        $totalTime = $event->getDuration();
 
+        $this->logger->info(
+            sprintf('Execution times for ProcessAgent.process: total: %u ms, cognition: %u ms, process: %s ms',
+                $totalTime,
+                $cognitionTime,
+                $processTime),
+            ['event' => 'protoflow_agent_end']
+        );
         return AgentResult::SUCCESS;
     }
 
@@ -146,16 +166,12 @@ class ProtoFlowAgent implements AgentInterface
             $jsonString = $matches[0];
             $cognition = json_decode($jsonString, true);
 
-            if (json_last_error() === JSON_ERROR_NONE) {
-                // Successfully decoded JSON
-                print_r($cognition);
-            } else {
-                echo "Invalid JSON extracted.";
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception(sprintf('JSON Error: %s', json_last_error()));
             }
         } else {
-            echo "No JSON found in the response.";
+            throw new \Exception('No JSON Found in the response');
         }
-
         return $cognition;
     }
 }

@@ -8,6 +8,8 @@ use Feral\Core\Process\Context\Context;
 use Feral\Core\Process\Engine\ProcessEngine;
 use Feral\Core\Process\ProcessFactory;
 use Feral\Core\Process\ProcessInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 /**
  * The process agent has a set of processes that can be run to complete
@@ -24,7 +26,9 @@ class ProcessAgent implements AgentInterface
         private readonly ProcessFactory $factory,
         private readonly ProcessEngine  $engine,
         private readonly AgentBrainInterface $brain,
-        private readonly ConfigurationRequirementBuilder $builder
+        private readonly ConfigurationRequirementBuilder $builder,
+        private readonly LoggerInterface $logger,
+        private readonly Stopwatch $stopwatch,
     ) {}
 
     /**
@@ -32,6 +36,8 @@ class ProcessAgent implements AgentInterface
      */
     function perform(string $mission, string $stimulus): AgentResult
     {
+        $this->logger->debug(sprintf('Running ProcessAgent with "%s" and "%s"', $mission, $stimulus), ['event' => 'process_agent_start']);
+        $this->stopwatch->start('perform');
         $promptInformation = [
             'command' => 'Take the mission and stimulus and decided which process should called and create the initial context. Required configuration values without default values must be set in the initial context. Optional configuration values are optional.',
             'mission' => $mission,
@@ -40,7 +46,10 @@ class ProcessAgent implements AgentInterface
             'response' => $this->getOutputExample()
         ];
 
+
         $cognition = $this->think($promptInformation);
+        $cognitionTiming = $this->stopwatch->lap('perform');
+        $cognitionTime = $cognitionTiming->getDuration();
 
         // GET THE PROCESS SELECTED BY THE BRAIN
         if (empty($cognition[self::PROCESS_KEY])) {
@@ -56,7 +65,18 @@ class ProcessAgent implements AgentInterface
 
         // PROCESS
         $this->engine->process($process, $context);
+        $processTiming = $this->stopwatch->lap('perform');
+        $processTime = $processTiming->getDuration() - $cognitionTime;
+        $event = $this->stopwatch->stop('perform');
+        $totalTime = $event->getDuration();
 
+        $this->logger->info(
+            sprintf('Execution times for ProcessAgent.process: total: %u ms, cognition: %u ms, process: %s ms',
+                $totalTime,
+                $cognitionTime,
+                $processTime),
+            ['event' => 'process_agent_end']
+        );
         return AgentResult::SUCCESS;
     }
 
@@ -134,14 +154,11 @@ class ProcessAgent implements AgentInterface
             $jsonString = $matches[0];
             $cognition = json_decode($jsonString, true);
 
-            if (json_last_error() === JSON_ERROR_NONE) {
-                // Successfully decoded JSON
-                print_r($cognition);
-            } else {
-                echo "Invalid JSON extracted.";
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception(sprintf('JSON Error: %s', json_last_error()));
             }
         } else {
-            echo "No JSON found in the response.";
+            throw new \Exception('No JSON Found in the response');
         }
 
         return $cognition;
